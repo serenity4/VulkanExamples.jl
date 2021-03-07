@@ -1,0 +1,20 @@
+{
+    "folders": [
+        {
+            "path": "."
+        },
+        {
+            "path": "../Vulkan/generated",
+            "name": "Vulkan (generated)"
+        },
+        {
+            "path": "../Vulkan",
+            "name": "Vulkan"
+        },
+        {
+            "path": "../VulkanShaders",
+            "name": "Vulkan Shaders"
+        }
+    ],
+    "settings": {}
+}
