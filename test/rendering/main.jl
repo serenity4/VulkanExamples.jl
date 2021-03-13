@@ -55,10 +55,23 @@ colors = [
     Point4f(1., 1., 1., 0.4),
 ]
 
-function find_memory_type(physical_device, type_flag, properties)
+function find_memory_type(physical_device::PhysicalDevice, type_flag, properties::MemoryPropertyFlag)
     mem_props = get_physical_device_memory_properties(physical_device)
-    indices = findall(x -> (MemoryPropertyFlag(x.property_flags) & properties) == properties, mem_props.memory_types[1:mem_props.memory_type_count]) .- 1
-    indices[findfirst(i -> type_flag & 1 << i ≠ 0, indices)]
+    indices = findall(x -> (x.property_flags & properties) == properties, mem_props.memory_types[1:mem_props.memory_type_count]) .- 1
+    if isempty(indices)
+        error("Could not find memory with properties $properties")
+    else
+        ind = findfirst(i -> type_flag & 1 << i ≠ 0, indices)
+        if isnothing(ind)
+            error("Could not find memory with type $type_flag")
+        else
+            indices[ind]
+        end
+    end
+end
+
+function Vulkan.DeviceMemory(device::Device, memory_requirements::MemoryRequirements, properties)
+    DeviceMemory(device, memory_requirements.size, find_memory_type(device.physical_device, memory_requirements.memory_type_bits, properties))
 end
 
 function main()
@@ -104,7 +117,7 @@ function main()
     width = height = 100
     fb_image = Image(device, VK_IMAGE_TYPE_2D, format, Extent3D(width, height, 1), 1, 1, SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_SHARING_MODE_EXCLUSIVE, [0], VK_IMAGE_LAYOUT_UNDEFINED)
     mem_reqs = get_image_memory_requirements(fb_image.device, fb_image)
-    fb_image_memory = DeviceMemory(device, mem_reqs.size, 1)
+    fb_image_memory = DeviceMemory(device, mem_reqs, MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
     bind_image_memory(device, fb_image, fb_image_memory, 0)
     fb_image_view = ImageView(fb_image.device, fb_image, VK_IMAGE_VIEW_TYPE_2D, format, ComponentMapping(fill(VK_COMPONENT_SWIZZLE_IDENTITY, 4)...), ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT,0,1,0,1))
     framebuffer = Framebuffer(render_pass.device, render_pass, [fb_image_view], width, height, 1)
@@ -140,7 +153,7 @@ function main()
     datasize = sizeof(eltype(vertices)) * length(vertices)
     vertex_buffer = Buffer(device, datasize, BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, [0])
     vertex_buffer_memreqs = get_buffer_memory_requirements(vertex_buffer.device, vertex_buffer)
-    vertex_buffer_memory = DeviceMemory(vertex_buffer.device, vertex_buffer_memreqs.size, find_memory_type(vertex_buffer.device.physical_device, vertex_buffer_memreqs.memory_type_bits, MEMORY_PROPERTY_HOST_VISIBLE_BIT | MEMORY_PROPERTY_HOST_COHERENT_BIT))
+    vertex_buffer_memory = DeviceMemory(vertex_buffer.device, vertex_buffer_memreqs, MEMORY_PROPERTY_HOST_VISIBLE_BIT | MEMORY_PROPERTY_HOST_COHERENT_BIT)
     bind_buffer_memory(vertex_buffer.device, vertex_buffer, vertex_buffer_memory, 0)
     dataptr = unwrap(map_memory(vertex_buffer_memory.device, vertex_buffer_memory, 0, datasize))
     unsafe_copyto!(Ptr{eltype(vertices)}(dataptr), pointer(vertices), length(vertices))
