@@ -1,7 +1,9 @@
 module VulkanExamples
 
-using Vulkan
+using Reexport
 using MLStyle
+
+@reexport using Vulkan
 
 function __init__()
     debug_callback_c[] = @cfunction(default_debug_callback, UInt32, (VkDebugUtilsMessageSeverityFlagBitsEXT, VkDebugUtilsMessageTypeFlagBitsEXT, Ptr{vk.VkDebugUtilsMessengerCallbackDataEXT}, Ptr{Cvoid}))
@@ -16,6 +18,7 @@ export
 
         # memory
         find_memory_type,
+        buffer_size,
 
         # vertex
         PosColor,

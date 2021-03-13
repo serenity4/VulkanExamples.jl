@@ -29,3 +29,17 @@ function vk.VkFormat(::Type{T}) where {T}
         &RGBA{Float16} => VK_FORMAT_R16G16B16A16_SFLOAT
     end
 end
+
+buffer_size(data::AbstractVector{T}) where {T} = sizeof(eltype(data)) * length(data)
+buffer_size(data) = sizeof(data)
+
+function Vulkan.DeviceMemory(buffer::Buffer, data)
+    device = buffer.device
+    memreqs = get_buffer_memory_requirements(device, buffer)
+    memory = DeviceMemory(device, memreqs, MEMORY_PROPERTY_HOST_VISIBLE_BIT | MEMORY_PROPERTY_HOST_COHERENT_BIT)
+    bind_buffer_memory(device, buffer, memory, 0)
+    dataptr = unwrap(map_memory(device, memory, 0, buffer_size(data)))
+    GC.@preserve data unsafe_copyto!(Ptr{eltype(data)}(dataptr), pointer(data), length(data))
+    unwrap(unmap_memory(device, memory))
+    memory
+end
