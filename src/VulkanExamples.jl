@@ -30,6 +30,7 @@ export init,
 
     # vertex
     PosColor,
+    PosUV,
     Point4f,
     invert_y_axis
 

@@ -16,6 +16,19 @@ function init(;
     if "VK_EXT_debug_utils" ∉ instance_extensions
         push!(instance_extensions, "VK_EXT_debug_utils")
     end
+
+    available_layers = unwrap(enumerate_instance_layer_properties())
+    unsupported_layers = filter(!in(getproperty.(available_layers, :layer_name)), instance_layers)
+    if !isempty(unsupported_layers)
+        error("Requesting unsupported instance layers: $unsupported_layers")
+    end
+
+    available_extensions = unwrap(enumerate_instance_extension_properties())
+    unsupported_extensions = filter(!in(getproperty.(available_extensions, :extension_name)), instance_extensions)
+    if !isempty(unsupported_extensions)
+        error("Requesting unsupported instance extensions: $unsupported_extensions")
+    end
+
     instance = Instance(instance_layers, instance_extensions; application_info = ApplicationInfo(v"1", v"1", v"1.2"))
     messenger = DebugUtilsMessengerEXT(
         instance,
@@ -35,12 +48,21 @@ function init(;
         function_pointer(instance, "vkDestroyDebugUtilsMessengerEXT"),
     )
     physical_device = first(unwrap(enumerate_physical_devices(instance)))
+
+    # TODO: check for supported device features
+    available_extensions = unwrap(enumerate_device_extension_properties(physical_device))
+    unsupported_extensions = filter(!in(getproperty.(available_extensions, :extension_name)), device_extensions)
+    if !isempty(unsupported_extensions)
+        error("Requesting unsupported device extensions: $unsupported_extensions")
+    end
+
+    queue_index = find_queue_index(physical_device, queue_flags)
     device = Device(
         physical_device,
-        [DeviceQueueCreateInfo(find_queue_index(physical_device, queue_flags), ones(Float32, nqueues))],
+        [DeviceQueueCreateInfo(queue_index, ones(Float32, nqueues))],
         [],
         device_extensions;
         enabled_features,
     )
-    device, messenger
+    device, get_device_queue(device, 0, queue_index), messenger
 end
