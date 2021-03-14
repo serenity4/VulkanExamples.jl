@@ -261,7 +261,7 @@ function main(output_png, points, colors; width = 1000, height = 1000)
 end
 
 main(
-    "render.png",
+    joinpath(@__DIR__, "render.png"),
     Point2f[(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)],
     [
         RGBA{Float16}(0.0, 0.0, 1.0, 0.0),
