@@ -6,7 +6,7 @@ using FileIO
 using Meshes
 
 function main(output_png, points, colors; width = 1000, height = 1000)
-    device, messenger = init(enabled_features = PhysicalDeviceFeatures(:geometryShader))
+    device, queue, messenger = init(enabled_features = PhysicalDeviceFeatures(:geometryShader))
 
     VertexType = PosColor{eltype(points),eltype(colors)}
     format = VkFormat(eltype(colors))
@@ -254,9 +254,9 @@ function main(output_png, points, colors; width = 1000, height = 1000)
     end_command_buffer(command_buffer)
 
     # execute computation
-    queue_submit(get_device_queue(device, 0, 0), [SubmitInfo([], [], [command_buffer], [])])
+    queue_submit(queue, [SubmitInfo([], [], [command_buffer], [])])
     GC.@preserve framebuffer imemory vmemory fb_image_memory fb_image_view command_buffer command_pool unwrap(
-        queue_wait_idle(get_device_queue(device, 0, 0)),
+        queue_wait_idle(queue),
     )
 
     # map image into a Julia array
