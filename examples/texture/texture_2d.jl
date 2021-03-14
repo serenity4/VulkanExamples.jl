@@ -5,7 +5,7 @@ using ColorTypes
 using FileIO
 using Meshes
 
-function main(output_png, points, texture; width=1000, height=1000, uv_coords=nothing)
+function main(output_png, points, texture; width = 1000, height = 1000, uv_coords = nothing)
     device, queue, messenger = init(enabled_features = PhysicalDeviceFeatures(:samplerAnisotropy))
     props = get_physical_device_properties(device.physical_device)
 
@@ -41,7 +41,7 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
                 0,
                 PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                 PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-                dst_access_mask=ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                dst_access_mask = ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
             ),
         ],
     )
@@ -83,7 +83,11 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
 
     # prepare shaders
     vert_shader = Shader(device, ShaderFile(joinpath(@__DIR__, "texture_2d.vert"), FormatGLSL()), DescriptorBinding[])
-    frag_shader = Shader(device, ShaderFile(joinpath(@__DIR__, "texture_2d.frag"), FormatGLSL()), [DescriptorBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1)])
+    frag_shader = Shader(
+        device,
+        ShaderFile(joinpath(@__DIR__, "texture_2d.frag"), FormatGLSL()),
+        [DescriptorBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0, 1)],
+    )
     shaders = [vert_shader, frag_shader]
     dset_layouts = create_descriptor_set_layouts(shaders)
 
@@ -95,8 +99,8 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
     )
     input_assembly_state = PipelineInputAssemblyStateCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP, false)
     viewport_state = PipelineViewportStateCreateInfo(
-        viewports=[Viewport(0, 0, width, height, 0, 1)],
-        scissors=[Rect2D(Offset2D(0, 0), Extent2D(width, height))],
+        viewports = [Viewport(0, 0, width, height, 0, 1)],
+        scissors = [Rect2D(Offset2D(0, 0), Extent2D(width, height))],
     )
     rasterizer = PipelineRasterizationStateCreateInfo(
         false,
@@ -108,7 +112,7 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
         0.0,
         0.0,
         1.0,
-        cull_mode=CULL_MODE_BACK_BIT,
+        cull_mode = CULL_MODE_BACK_BIT,
     )
     multisample_state = PipelineMultisampleStateCreateInfo(SAMPLE_COUNT_1_BIT, false, 1.0, false, false)
     color_blend_attachment = PipelineColorBlendAttachmentState(
@@ -119,7 +123,7 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
         VK_BLEND_FACTOR_SRC_ALPHA,
         VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
         VK_BLEND_OP_ADD;
-        color_write_mask=COLOR_COMPONENT_R_BIT | COLOR_COMPONENT_G_BIT | COLOR_COMPONENT_B_BIT,
+        color_write_mask = COLOR_COMPONENT_R_BIT | COLOR_COMPONENT_G_BIT | COLOR_COMPONENT_B_BIT,
     )
     color_blend_state = PipelineColorBlendStateCreateInfo(
         false,
@@ -151,7 +155,13 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
 
     # load texture into buffer
     tdata = RGBA{Float16}.(load(texture))
-    tbuffer = Buffer(device, buffer_size(tdata), BUFFER_USAGE_TRANSFER_DST_BIT | BUFFER_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, [0])
+    tbuffer = Buffer(
+        device,
+        buffer_size(tdata),
+        BUFFER_USAGE_TRANSFER_DST_BIT | BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_SHARING_MODE_EXCLUSIVE,
+        [0],
+    )
     tmemory = DeviceMemory(tbuffer, tdata)
 
     # create texture image
@@ -174,11 +184,63 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
     command_pool = CommandPool(device, 0)
 
     # upload texture to image
-    cbuffer, _... = unwrap(allocate_command_buffers(device, CommandBufferAllocateInfo(command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)))
+    cbuffer, _... = unwrap(
+        allocate_command_buffers(device, CommandBufferAllocateInfo(command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)),
+    )
     begin_command_buffer(cbuffer, CommandBufferBeginInfo())
-    cmd_pipeline_barrier(cbuffer, PIPELINE_STAGE_TOP_OF_PIPE_BIT, PIPELINE_STAGE_TRANSFER_BIT, [], [], [ImageMemoryBarrier(AccessFlag(0), ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, timage, ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1))])
-    cmd_copy_buffer_to_image(cbuffer, tbuffer, timage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, [BufferImageCopy(0, size(tdata)..., ImageSubresourceLayers(IMAGE_ASPECT_COLOR_BIT, 0, 0, 1), Offset3D(0,0,0), Extent3D(size(tdata)..., 1))])
-    cmd_pipeline_barrier(cbuffer, PIPELINE_STAGE_TRANSFER_BIT, PIPELINE_STAGE_FRAGMENT_SHADER_BIT, [], [], [ImageMemoryBarrier(ACCESS_TRANSFER_WRITE_BIT, AccessFlag(0), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, timage, ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1))])
+    cmd_pipeline_barrier(
+        cbuffer,
+        PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+        PIPELINE_STAGE_TRANSFER_BIT,
+        [],
+        [],
+        [
+            ImageMemoryBarrier(
+                AccessFlag(0),
+                ACCESS_TRANSFER_WRITE_BIT,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_QUEUE_FAMILY_IGNORED,
+                VK_QUEUE_FAMILY_IGNORED,
+                timage,
+                ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1),
+            ),
+        ],
+    )
+    cmd_copy_buffer_to_image(
+        cbuffer,
+        tbuffer,
+        timage,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        [
+            BufferImageCopy(
+                0,
+                size(tdata)...,
+                ImageSubresourceLayers(IMAGE_ASPECT_COLOR_BIT, 0, 0, 1),
+                Offset3D(0, 0, 0),
+                Extent3D(size(tdata)..., 1),
+            ),
+        ],
+    )
+    cmd_pipeline_barrier(
+        cbuffer,
+        PIPELINE_STAGE_TRANSFER_BIT,
+        PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        [],
+        [],
+        [
+            ImageMemoryBarrier(
+                ACCESS_TRANSFER_WRITE_BIT,
+                AccessFlag(0),
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                VK_QUEUE_FAMILY_IGNORED,
+                VK_QUEUE_FAMILY_IGNORED,
+                timage,
+                ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1),
+            ),
+        ],
+    )
     end_command_buffer(cbuffer)
 
     tuploaded = Fence(device)
@@ -209,7 +271,7 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
         0,
         0,
         VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK,
-        false
+        false,
     )
 
     # create local image for transfer
@@ -230,11 +292,27 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
 
     local_image_memory = DeviceMemory(local_image, MEMORY_PROPERTY_HOST_COHERENT_BIT | MEMORY_PROPERTY_HOST_VISIBLE_BIT)
 
-    command_buffer, _... = unwrap(allocate_command_buffers(device, CommandBufferAllocateInfo(command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)))
+    command_buffer, _... = unwrap(
+        allocate_command_buffers(device, CommandBufferAllocateInfo(command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)),
+    )
 
     descriptor_pool = DescriptorPool(device, 1, [DescriptorPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)])
     dsets = unwrap(allocate_descriptor_sets(device, DescriptorSetAllocateInfo(descriptor_pool, dset_layouts)))
-    update_descriptor_sets(device, [WriteDescriptorSet(first(dsets), 1, 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, [DescriptorImageInfo(tsampler, timage_view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)], [], [])], [])
+    update_descriptor_sets(
+        device,
+        [
+            WriteDescriptorSet(
+                first(dsets),
+                1,
+                0,
+                VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                [DescriptorImageInfo(tsampler, timage_view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)],
+                [],
+                [],
+            ),
+        ],
+        [],
+    )
 
     begin_command_buffer(command_buffer, CommandBufferBeginInfo())
     cmd_bind_vertex_buffers(command_buffer, [vbuffer], [0])
@@ -310,7 +388,9 @@ function main(output_png, points, texture; width=1000, height=1000, uv_coords=no
 
     GC.@preserve tbuffer tmemory timage timage_memory cbuffer unwrap(wait_for_fences(device, [tuploaded], true, 0))
     unwrap(queue_submit(queue, [SubmitInfo([], [], [command_buffer], [])]))
-    GC.@preserve vbuffer vmemory timage timage_view timage_memory fb_image fb_image_view fb_image_memory local_image descriptor_pool command_pool command_buffer dsets unwrap(queue_wait_idle(queue))
+    GC.@preserve vbuffer vmemory timage timage_view timage_memory fb_image fb_image_view fb_image_memory local_image descriptor_pool command_pool command_buffer dsets unwrap(
+        queue_wait_idle(queue),
+    )
 
     # map image into a Julia array
     image = download_data(Vector{RGBA{Float16}}, local_image_memory, (width, height))
@@ -322,7 +402,7 @@ end
 
 main(
     joinpath(@__DIR__, "render.png"),
-    Point2f[(-1., -1.), (1., -1.), (-1., 1.), (1., 1.)],
+    Point2f[(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)],
     joinpath(@__DIR__, "texture_2d.png"),
     width = 2048,
     height = 2048,
