@@ -59,9 +59,7 @@ function main(output_png, points, colors; width = 1000, height = 1000)
         [0],
         VK_IMAGE_LAYOUT_UNDEFINED,
     )
-    mem_reqs = get_image_memory_requirements(fb_image.device, fb_image)
-    fb_image_memory = DeviceMemory(device, mem_reqs, MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-    bind_image_memory(device, fb_image, fb_image_memory, 0)
+    fb_image_memory = DeviceMemory(fb_image, MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
     fb_image_view = ImageView(
         fb_image.device,
         fb_image,
@@ -168,13 +166,8 @@ function main(output_png, points, colors; width = 1000, height = 1000)
         [0],
         VK_IMAGE_LAYOUT_UNDEFINED,
     )
-    local_image_memreqs = get_image_memory_requirements(local_image.device, local_image)
-    local_image_memory = DeviceMemory(
-        local_image.device,
-        local_image_memreqs,
-        MEMORY_PROPERTY_HOST_COHERENT_BIT | MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-    )
-    bind_image_memory(local_image.device, local_image, local_image_memory, 0)
+
+    local_image_memory = DeviceMemory(local_image, MEMORY_PROPERTY_HOST_COHERENT_BIT | MEMORY_PROPERTY_HOST_VISIBLE_BIT)
 
     # record commands
     command_pool = CommandPool(device, 0)
@@ -260,9 +253,7 @@ function main(output_png, points, colors; width = 1000, height = 1000)
     )
 
     # map image into a Julia array
-    memptr = unwrap(map_memory(device, local_image_memory, 0, local_image_memreqs.size))
-    image = deepcopy(unsafe_wrap(Array, convert(Ptr{RGBA{Float16}}, memptr), (width, height), own = false))
-    unwrap(unmap_memory(device, local_image_memory))
+    image = download_data(Vector{eltype(colors)}, local_image_memory, (width, height))
 
     save(output_png, image)
 

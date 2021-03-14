@@ -27,6 +27,8 @@ export init,
     # memory
     find_memory_type,
     buffer_size,
+    upload_data,
+    download_data,
 
     # vertex
     PosColor,
