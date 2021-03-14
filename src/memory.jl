@@ -34,7 +34,7 @@ Upload data to the specified memory.
 !!! warning
     The `memory` must be host coherent and host visible, otherwise the operation will fail.
 """
-function upload_data(memory::DeviceMemory, data::AbstractVector{T}) where {T}
+function upload_data(memory::DeviceMemory, data::DenseArray{T}) where {T}
     memptr = unwrap(map_memory(memory.device, memory, 0, buffer_size(data)))
     GC.@preserve data unsafe_copyto!(Ptr{T}(memptr), pointer(data), length(data))
     unwrap(unmap_memory(memory.device, memory))
@@ -45,7 +45,7 @@ Download data from the specified memory to an `Array`.
 
 If `copy` if set to true, then all the data mapped from `memory` will be copied. If not, care should be taken to preserve the `memory` mapped and valid as long as the returned data is in use.
 """
-function download_data(::Type{<:Array{T}}, memory::DeviceMemory, dims; offset=0, copy=true, unmap=true) where {T}
+function download_data(::Type{<:DenseArray{T}}, memory::DeviceMemory, dims; offset=0, copy=true, unmap=true) where {T}
     size = sizeof(T) * prod(dims)
     memptr = unwrap(map_memory(memory.device, memory, offset, size))
     data = unsafe_wrap(Array, convert(Ptr{T}, memptr), dims; own=false)
@@ -73,7 +73,7 @@ end
 """
 Allocate a host visible and coherent `DeviceMemory` object, bind it to the `buffer` using memory requirements from `get_buffer_memory_requirements` and upload `data` to it.
 """
-function Vulkan.DeviceMemory(buffer::Buffer, data::AbstractVector{T}) where {T}
+function Vulkan.DeviceMemory(buffer::Buffer, data::DenseArray{T}) where {T}
     memory = DeviceMemory(buffer, MEMORY_PROPERTY_HOST_VISIBLE_BIT | MEMORY_PROPERTY_HOST_COHERENT_BIT)
     upload_data(memory, data)
     memory
