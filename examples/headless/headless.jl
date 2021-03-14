@@ -5,29 +5,13 @@ using ColorTypes
 using FileIO
 using Meshes
 
-# points = [
-#     Point2f(-0.5, -0.5),
-#     Point2f(0.5, -0.5),
-#     Point2f(0.5, 0.5),
-#     Point2f(-0.5, 0.5),
-# ]
-
-# colors = [
-#     RGBA{Float16}(0., 0., 1., 0.),
-#     RGBA{Float16}(0., 1., 0., 0.05),
-#     RGBA{Float16}(1., 1., 1., 0.4),
-#     RGBA{Float16}(1., 0., 0., 1.),
-# ]
-
-
-function main(output_png)
-    npoints = 12
-    points = [Point2f(2 * rand() - 1, 2 * rand() - 1) for _ ∈ 1:npoints]
-    colors = [RGBA{Float16}(rand(4)...) for _ ∈ 1:npoints]
-    VertexType = PosColor{eltype(points),eltype(colors)}
-
+function main(output_png, points, colors; width=1000, height=1000)
     device, messenger = init(enabled_features = PhysicalDeviceFeatures(:geometryShader))
+
+    VertexType = PosColor{eltype(points),eltype(colors)}
     format = VkFormat(eltype(colors))
+
+    # define render pass
     target_attachment = AttachmentDescription(format, SAMPLE_COUNT_1_BIT, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE, VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
     render_pass = RenderPass(
         device,
@@ -48,8 +32,8 @@ function main(output_png)
             SubpassDependency(VK_SUBPASS_EXTERNAL, 0, PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; dst_access_mask=ACCESS_COLOR_ATTACHMENT_WRITE_BIT)
         ]
     )
-    command_pool = CommandPool(device, 0)
-    width = height = 1000
+
+    # create image and framebuffer
     fb_image = Image(device, VK_IMAGE_TYPE_2D, format, Extent3D(width, height, 1), 1, 1, SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, IMAGE_USAGE_COLOR_ATTACHMENT_BIT | IMAGE_USAGE_TRANSFER_SRC_BIT, VK_SHARING_MODE_EXCLUSIVE, [0], VK_IMAGE_LAYOUT_UNDEFINED)
     mem_reqs = get_image_memory_requirements(fb_image.device, fb_image)
     fb_image_memory = DeviceMemory(device, mem_reqs, MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
@@ -103,13 +87,14 @@ function main(output_png)
         )]
     ))
 
-    # prepare transfer of rendered image
+    # create local image for transfer
     local_image = Image(device, VK_IMAGE_TYPE_2D, format, Extent3D(width, height, 1), 1, 1, SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_LINEAR, IMAGE_USAGE_TRANSFER_DST_BIT, VK_SHARING_MODE_EXCLUSIVE, [0], VK_IMAGE_LAYOUT_UNDEFINED)
     local_image_memreqs = get_image_memory_requirements(local_image.device, local_image)
     local_image_memory = DeviceMemory(local_image.device, local_image_memreqs, MEMORY_PROPERTY_HOST_COHERENT_BIT | MEMORY_PROPERTY_HOST_VISIBLE_BIT)
     bind_image_memory(local_image.device, local_image, local_image_memory, 0)
 
     # record commands
+    command_pool = CommandPool(device, 0)
     command_buffer, _... = unwrap(allocate_command_buffers(device, CommandBufferAllocateInfo(command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1)))
     begin_command_buffer(command_buffer, CommandBufferBeginInfo())
     cmd_bind_vertex_buffers(command_buffer, [vbuffer], [0])
@@ -138,4 +123,18 @@ function main(output_png)
     nothing
 end
 
-main("render.png")
+main(
+    "render.png",
+    [
+        Point2f(-0.5, -0.5),
+        Point2f(0.5, -0.5),
+        Point2f(0.5, 0.5),
+        Point2f(-0.5, 0.5),
+    ],
+    [
+        RGBA{Float16}(0., 0., 1., 0.),
+        RGBA{Float16}(0., 1., 0., 0.05),
+        RGBA{Float16}(1., 1., 1., 0.4),
+        RGBA{Float16}(1., 0., 0., 1.),
+    ],
+)
