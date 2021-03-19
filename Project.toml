@@ -12,9 +12,10 @@ Vulkan = "9f14b124-c50e-4008-a7d4-969b3a6cd68a"
 
 [compat]
 ColorTypes = "0.10"
-Meshes = "0.11"
 MLStyle = "0.4"
+Meshes = "0.11"
 Reexport = "1"
+Vulkan = "0.1"
 julia = "1.6"
 
 [extras]
