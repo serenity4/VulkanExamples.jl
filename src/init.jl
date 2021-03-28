@@ -56,7 +56,7 @@ function init(;
         error("Requesting unsupported device extensions: $unsupported_extensions")
     end
 
-    queue_index = find_queue_index(physical_device, queue_flags)
+    queue_index = find_queue_family(physical_device, queue_flags)
     device = Device(
         physical_device,
         [DeviceQueueCreateInfo(queue_index, ones(Float32, nqueues))],
