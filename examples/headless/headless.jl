@@ -36,9 +36,9 @@ function main(output_png, points, colors; width = 1000, height = 1000)
         [
             SubpassDependency(
                 VK_SUBPASS_EXTERNAL,
-                0,
-                PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                0;
+                src_stage_mask = PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                dst_stage_mask = PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                 dst_access_mask = ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
             ),
         ],
