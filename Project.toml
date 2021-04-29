@@ -11,7 +11,8 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Vulkan = "9f14b124-c50e-4008-a7d4-969b3a6cd68a"
 
 [compat]
-ColorTypes = "0.10, 0.11"
+ColorTypes = "0.11"
+Meshes = "0.12"
 MLStyle = "0.4"
 Meshes = "0.11, 0.12"
 Reexport = "1"
