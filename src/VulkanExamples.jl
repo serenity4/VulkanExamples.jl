@@ -2,6 +2,8 @@ module VulkanExamples
 
 using Reexport
 using MLStyle
+using Meshes
+using ColorTypes
 
 @reexport using Vulkan
 

@@ -1,7 +1,3 @@
-using Meshes
-using ColorTypes
-using MLStyle
-
 const Point4f = Point{4,Float32}
 
 abstract type VertexData end
