@@ -1,19 +1,17 @@
 module VulkanExamples
 
-using Reexport
 using MLStyle
 using Meshes
 using ColorTypes
-
-@reexport using Vulkan
+using Vulkan
 
 function __init__()
     debug_callback_c[] = @cfunction(
         default_debug_callback,
         UInt32,
         (
-            VkDebugUtilsMessageSeverityFlagBitsEXT,
-            VkDebugUtilsMessageTypeFlagBitsEXT,
+            DebugUtilsMessageSeverityFlagEXT,
+            DebugUtilsMessageTypeFlagEXT,
             Ptr{vk.VkDebugUtilsMessengerCallbackDataEXT},
             Ptr{Cvoid},
         )
