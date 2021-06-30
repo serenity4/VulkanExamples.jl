@@ -203,7 +203,7 @@ function main(output_png, points, colors; width = 1000, height = 1000)
             render_pass,
             framebuffer,
             Rect2D(Offset2D(0, 0), Extent2D(width, height)),
-            [vk.VkClearValue(vk.VkClearColorValue((0.1f0, 0.1f0, 0.15f0, 1.0f0)))],
+            [ClearValue(ClearColorValue((0.1f0, 0.1f0, 0.15f0, 1.0f0)))],
         ),
         SUBPASS_CONTENTS_INLINE,
     )
