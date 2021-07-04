@@ -1,4 +1,4 @@
 /Manifest.toml
 *.code-workspace
 archive
-*.png
+render.png

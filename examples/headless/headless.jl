@@ -35,7 +35,7 @@ function main(output_png, points, colors; width = 1000, height = 1000)
         ],
         [
             SubpassDependency(
-                vk.VK_SUBPASS_EXTERNAL,
+                SUBPASS_EXTERNAL,
                 0;
                 src_stage_mask = PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                 dst_stage_mask = PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -71,8 +71,8 @@ function main(output_png, points, colors; width = 1000, height = 1000)
     framebuffer = Framebuffer(render_pass.device, render_pass, [fb_image_view], width, height, 1)
 
     # prepare shaders
-    vert_shader = Shader(device, ShaderFile(joinpath(@__DIR__, "triangle.vert"), FormatGLSL()), DescriptorBinding[])
-    frag_shader = Shader(device, ShaderFile(joinpath(@__DIR__, "triangle.frag"), FormatGLSL()), DescriptorBinding[])
+    vert_shader = Shader(device, ShaderFile(joinpath(@__DIR__, "triangle.vert"), FormatGLSL()), [])
+    frag_shader = Shader(device, ShaderFile(joinpath(@__DIR__, "triangle.frag"), FormatGLSL()), [])
     shaders = [vert_shader, frag_shader]
 
     # prepare vertex and index data
@@ -190,8 +190,8 @@ function main(output_png, points, colors; width = 1000, height = 1000)
                 ACCESS_MEMORY_READ_BIT,
                 IMAGE_LAYOUT_UNDEFINED,
                 IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                vk.VK_QUEUE_FAMILY_IGNORED,
-                vk.VK_QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
                 local_image,
                 ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1),
             ),
@@ -221,8 +221,8 @@ function main(output_png, points, colors; width = 1000, height = 1000)
                 ACCESS_MEMORY_READ_BIT,
                 IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                 IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                vk.VK_QUEUE_FAMILY_IGNORED,
-                vk.VK_QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
                 fb_image,
                 ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1),
             ),

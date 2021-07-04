@@ -37,7 +37,7 @@ function main(output_png, points, texture; width = 1000, height = 1000, uv_coord
         ],
         [
             SubpassDependency(
-                vk.VK_SUBPASS_EXTERNAL,
+                SUBPASS_EXTERNAL,
                 0;
                 src_stage_mask = PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                 dst_stage_mask = PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -82,7 +82,7 @@ function main(output_png, points, texture; width = 1000, height = 1000, uv_coord
     vmemory = DeviceMemory(vbuffer, vdata)
 
     # prepare shaders
-    vert_shader = Shader(device, ShaderFile(joinpath(@__DIR__, "texture_2d.vert"), FormatGLSL()), DescriptorBinding[])
+    vert_shader = Shader(device, ShaderFile(joinpath(@__DIR__, "texture_2d.vert"), FormatGLSL()), [])
     frag_shader = Shader(
         device,
         ShaderFile(joinpath(@__DIR__, "texture_2d.frag"), FormatGLSL()),
@@ -192,16 +192,16 @@ function main(output_png, points, texture; width = 1000, height = 1000, uv_coord
         cbuffer,
         PIPELINE_STAGE_TOP_OF_PIPE_BIT,
         PIPELINE_STAGE_TRANSFER_BIT,
-        MemoryBarrier[],
-        BufferMemoryBarrier[],
+        [],
+        [],
         [
             ImageMemoryBarrier(
                 AccessFlag(0),
                 ACCESS_TRANSFER_WRITE_BIT,
                 IMAGE_LAYOUT_UNDEFINED,
                 IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                vk.VK_QUEUE_FAMILY_IGNORED,
-                vk.VK_QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
                 timage,
                 ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1),
             ),
@@ -226,16 +226,16 @@ function main(output_png, points, texture; width = 1000, height = 1000, uv_coord
         cbuffer,
         PIPELINE_STAGE_TRANSFER_BIT,
         PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-        MemoryBarrier[],
-        BufferMemoryBarrier[],
+        [],
+        [],
         [
             ImageMemoryBarrier(
                 ACCESS_TRANSFER_WRITE_BIT,
                 AccessFlag(0),
                 IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                vk.VK_QUEUE_FAMILY_IGNORED,
-                vk.VK_QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
                 timage,
                 ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1),
             ),
@@ -322,16 +322,16 @@ function main(output_png, points, texture; width = 1000, height = 1000, uv_coord
         command_buffer,
         PIPELINE_STAGE_TOP_OF_PIPE_BIT,
         PIPELINE_STAGE_TRANSFER_BIT,
-        MemoryBarrier[],
-        BufferMemoryBarrier[],
+        [],
+        [],
         [
             ImageMemoryBarrier(
                 AccessFlag(0),
                 ACCESS_MEMORY_READ_BIT,
                 IMAGE_LAYOUT_UNDEFINED,
                 IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                vk.VK_QUEUE_FAMILY_IGNORED,
-                vk.VK_QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
                 local_image,
                 ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1),
             ),
@@ -353,16 +353,16 @@ function main(output_png, points, texture; width = 1000, height = 1000, uv_coord
         command_buffer,
         PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
         PIPELINE_STAGE_TRANSFER_BIT,
-        MemoryBarrier[],
-        BufferMemoryBarrier[],
+        [],
+        [],
         [
             ImageMemoryBarrier(
                 ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
                 ACCESS_MEMORY_READ_BIT,
                 IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                 IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                vk.VK_QUEUE_FAMILY_IGNORED,
-                vk.VK_QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
+                QUEUE_FAMILY_IGNORED,
                 fb_image,
                 ImageSubresourceRange(IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1),
             ),
