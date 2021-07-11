@@ -248,7 +248,7 @@ function main(output_png, points, colors; width = 1000, height = 1000)
 
     # execute computation
     queue_submit(queue, [SubmitInfo([], [], [command_buffer], [])])
-    GC.@preserve framebuffer imemory vmemory fb_image_memory fb_image_view command_buffer command_pool unwrap(
+    GC.@preserve framebuffer ibuffer imemory vbuffer vmemory fb_image_memory fb_image_view command_buffer command_pool unwrap(
         queue_wait_idle(queue),
     )
 
